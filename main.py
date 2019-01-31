@@ -46,7 +46,7 @@ def update_instance():
 
 @get('/')
 def root():
-    return subprocess.run(['git', 'log', '-n', '1'], check=True, stdout=subprocess.PIPE).stdout.decode()
+    return subprocess.run(['git', 'log', '-n', '1'], check=True, cwd=cfg['paths']['root'], stdout=subprocess.PIPE).stdout.decode()
 
 
 @post('/')
