@@ -3,6 +3,8 @@ import subprocess
 
 from bottle import get, post, request, run
 
+import requests
+
 cfg = configparser.ConfigParser()
 with open('config.ini') as f:
     cfg.read_file(f)
@@ -32,15 +34,19 @@ class Server:
 
 server = Server()
 
+def log(msg):
+    print(msg)
+    requests.post(cfg['discord']['url'], json={'content': msg})
+
 
 def update_instance():
     server.stop()
-    print('PULLING')
+    log('Pulling changes from GitHub.')
     subprocess.run(['git', 'pull'], check=True, cwd=cfg['paths']['root'])
-    print('BUILDING')
+    log('Building with npm.')
     subprocess.run(['npm', 'run', 'build'], check=True,
                    cwd=cfg['paths']['frontend'])
-    print('RUNNING')
+    log('Deploying new server instance.')
     server.start()
 
 
@@ -52,6 +58,10 @@ def root():
 @post('/')
 def handle_webhook():
     if request.json is not None and 'ref' in request.json and request.json['ref'] == 'refs/heads/master':
+        if request.json['compare']:
+            log('Recieved commit: {}'.format(request.json['compare']))
+        else:
+            log('Recieved commit')
         update_instance()
 
 
